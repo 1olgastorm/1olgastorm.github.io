@@ -1,0 +1,591 @@
+<html>
+  <head>
+  <title>3d model preview</title>
+  <style>
+    body
+    {
+      margin: 0;
+    }
+    canvas
+    {
+      width:100%;
+      height:100%
+    };
+  </style>
+  </head>
+  <body>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>
+   
+    <div id="shoutbox"></div>
+    <div id="msgs"></div>
+    <table border="1">
+    <tr><td><canvas id="canvas1" width="366" height="254" style="background-color:#eee; border:1px solid #ccc;"></canvas></td><td><canvas id="canvas2" width="366" height="254" style="background-color:#eee; border:1px solid #ccc;"></canvas></td>
+    </tr>
+    <tr><td><canvas id="canvas3" width="366" height="254" style="background-color:#eee; border:1px solid #ccc;"></canvas></td><td><canvas id="canvas4" width="366" height="254" style="background-color:#eee; border:1px solid #ccc;"></canvas></td></tr>
+    </table>
+
+    <script>
+
+    
+var a1 = new Array();
+var b1 = new Array();
+var c1 = new Array();
+
+
+
+const api = {  };
+
+
+
+var rotation = 0;
+
+
+ var canvas1 = document.getElementById("canvas1");
+ var ctx1 = canvas1.getContext("2d");
+ 
+ var canvas2 = document.getElementById("canvas2");
+ var ctx2 = canvas2.getContext("2d");
+ 
+ var canvas3 = document.getElementById("canvas3");
+ var ctx3 = canvas3.getContext("2d");
+ 
+ var canvas4 = document.getElementById("canvas4");
+ var ctx4 = canvas4.getContext("2d");
+ 
+ var canvasArr = [canvas1,canvas2,canvas3,canvas4];
+ var ctxArr = [ctx1,ctx2,ctx3,ctx4];
+
+var hsize = 1;
+var arr2 = new Array();
+
+var model = new Array();
+var matrix1;
+
+ var gui = new dat.GUI();
+ 
+ const emotes = [ 'Dummie', 'CCube', 'CCyl', 'Cone', 'Cube', 'Cylinder','Dummie','Octa','Pyramid','Sphere','Tetra','Torus','TorusKnot','Tube'];
+
+
+
+var preX = 0;
+
+
+var arr;
+var arr2;
+
+var IsMouseDown = false;
+
+var r = true;
+  
+  var hsize;
+ 
+ function DegToRad(Degrees)
+ {
+  return Degrees * (Math.PI / 180);
+ }
+
+Matrix1 = function()
+ {
+   this.hsize = 0;
+   
+   this.arr = new Array(768);
+   this.hsize2 = 0;
+   
+   
+   this.init = function()
+   {
+      for (var i = 0; i < this.arr.length; i++) {
+        this.arr[i] = new Array(4);
+      }
+      
+   }
+   
+   this.Translate = function(x,y,z)
+   {
+    
+    var tmp = new Matrix1();
+    tmp.init();
+    
+    tmp.addLine(1,0,0,0);
+    tmp.addLine(0,1,0,0);
+    tmp.addLine(0,0,1,0);
+    tmp.addLine(x,y,z,1);
+    
+    
+    this.hsize2 = tmp.hsize;
+    
+    this.MultMatrix(tmp);
+   
+    
+   }
+   
+   
+   this.LoadIdentity = function()
+   {
+      this.addLine(1,0,0,0);
+      this.addLine(0,1,0,0);
+      this.addLine(0,0,1,0);
+      this.addLine(0,0,0,1);
+   }
+   this.RotateZ = function(angle)
+   {
+    var tmp = new Matrix1();
+    tmp.init();
+    tmp.addLine(Math.cos(DegToRad(angle)),Math.sin(DegToRad(angle)),0,0);
+    tmp.addLine(-Math.sin(DegToRad(angle)),Math.cos(DegToRad(angle)),0,0);
+    tmp.addLine(0,0,1,0);
+    tmp.addLine(0,0,0,1);
+    this.MultMatrix(tmp);
+   }
+   this.RotateY = function(angle)
+   {
+    var tmp = new Matrix1();
+    tmp.init();
+    
+     tmp.addLine(Math.cos(DegToRad(angle)),0,-Math.sin(DegToRad(angle)),0);
+     tmp.addLine(0,1,0,0);
+     tmp.addLine(Math.sin(DegToRad(angle)),0,Math.cos(DegToRad(angle)),0);
+     tmp.addLine(0,0,0,1);
+     this.MultMatrix(tmp);
+    
+   }
+   this.RotateX = function(angle)
+   {
+       var tmp = new Matrix1();
+        tmp.init();
+       tmp.addLine(1,0,0,0);
+       tmp.addLine(0,Math.cos(DegToRad(angle)),Math.sin(DegToRad(angle)),0);
+       tmp.addLine(0,-Math.sin(DegToRad(angle)),Math.cos(DegToRad(angle)),0);
+       tmp.addLine(0,0,0,1);
+       this.MultMatrix(tmp);
+   }
+   
+   this.Scale = function(x,y,z)
+   {
+        var tmp = new Matrix1();
+        tmp.init();
+      
+        tmp.addLine(x,0,0,0);
+        tmp.addLine(0,y,0,0);
+        tmp.addLine(0,0,z,0);
+        tmp.addLine(0,0,0,1);
+        this.MultMatrix(tmp);
+   
+   }
+   
+   this.addLine = function(a,b,c,d)
+    {
+        
+        this.hsize++;
+        this.arr[this.hsize-1][0]=a;
+        this.arr[this.hsize-1][1]=b;
+        this.arr[this.hsize-1][2]=c;
+        this.arr[this.hsize-1][3]=d;
+    }
+   this.Copy = function(m)
+   {
+     
+    if(this.hsize > 0)
+    {
+         for(var i = 0; i < this.hsize-1; i++)
+         {
+            for(var j = 0; j < 3; j++)
+            {
+                m.arr[i][j]=this.arr[i][j]; 
+             
+               
+            }
+         }
+        
+         m.hsize=this.hsize;
+        
+       
+    
+    }
+   }
+   
+  this.MultMatrix = function(m)
+  {
+    var i,j =0,
+    arrMatrix = new Array(768);
+   
+    
+    
+    for (var i = 0; i < arrMatrix.length; i++) {
+        arrMatrix[i] = new Array(4);
+      }
+    
+    
+    
+    if(m.hsize==4)
+    {
+      
+       
+      for(var i = 0; i < hsize-1; i++)
+         {
+            for(var j = 0; j < 3; j++)
+            {
+               arrMatrix[i][j]=this.arr[i][j];
+               
+                
+            }
+         }
+      
+        for(var i = 0; i < 768-1; i++)
+         {
+            for(var j = 0; j < 3; j++)
+            {
+              
+              this.arr[i][j]=
+                    arrMatrix[i][0]*m.arr[0][j]+
+                  arrMatrix[i][1]*m.arr[1][j]+
+                  arrMatrix[i][2]*m.arr[2][j]+
+                 1*m.arr[3][j];
+              
+            }
+         }  
+         
+    } 
+ 
+      
+    
+  }
+ 
+ }  
+ 
+ Point = function(x,y)
+ {
+  this.x = x;
+  this.y = y;
+ }
+
+
+ Model1 = function()
+    {
+      this.i = 0;
+      this.a = new Point(0,0);
+      this.b = new Point(0,0);
+      this.c = new Point(0,0);
+      this.ax = 0;
+      this.ay = 0;
+      this.az = 0;
+      this.bx = 0;
+      this.by = 0;
+      this.bz = 0;
+      
+      this.nx = 0;
+      this.ny = 0;
+      this.nz = 0;
+      
+      this.d = 0;
+      
+     
+      this.MultMatrix = function(m)
+      {
+         arr.Copy(arr2);
+         arr2.MultMatrix(m);
+         hsize = arr.hsize;
+        
+      }
+      this.Draw = function(ctx,w,h)
+      {
+         
+          if(arr2.hsize>0)
+          {
+          
+           while(this.i<arr2.hsize-3)
+           {
+            
+            this.i=this.i+3;
+            this.a.x=Math.floor(arr2.arr[this.i][0]);
+            this.a.y=Math.floor(arr2.arr[this.i][1]);
+          
+            
+            this.b.x=Math.floor(arr2.arr[this.i+1][0]);
+            this.b.y=Math.floor(arr2.arr[this.i+1][1]);
+            this.c.x=Math.floor(arr2.arr[this.i+2][0]);
+            this.c.y=Math.floor(arr2.arr[this.i+2][1]);
+            
+            
+            this.ax=arr2.arr[this.i][0];
+            this.ay=arr2.arr[this.i][1];
+            this.az=arr2.arr[this.i][2];
+            this.bx=arr2.arr[this.i+1][0];
+            this.by=arr2.arr[this.i+1][1];
+            this.bz=arr2.arr[this.i+1][2];
+            
+              this.nx=this.ay*this.bz-this.az*this.by;
+              this.ny=this.az*this.bx-this.ax*this.bz;
+              this.nz=this.ax*this.by-this.ay*this.bx;
+              
+              this.d=Math.sqrt(this.nx*this.nx+this.ny*this.ny+this.nz*this.nz);
+              
+             
+              if (this.d==0) this.d=10e10;
+              this.nx=this.nx/this.d;
+              
+               this.nx=Math.abs(this.nx);
+               this.r=Math.round(this.nx*255);
+               this.r=Math.abs(this.r);
+               if(this.r>255) {this.r=255};
+               this.r=255-this.r;
+               
+               
+               
+            
+              ctx.beginPath();
+              
+              
+              
+              ctx.moveTo(this.a.x,this.a.y);
+              ctx.lineWidth = 0.5;
+              ctx.lineTo(this.b.x,this.b.y);
+              ctx.lineTo(this.c.x,this.c.y);
+              ctx.lineTo(this.a.x,this.a.y);
+              
+              ctx.strokeStyle="#000000";
+              ctx.stroke();
+              
+            
+             
+              
+           }
+            
+            
+            
+          }
+      }
+      
+    }
+    
+    //Последний элемент this.c.x и соотвественно this.c.y выдает NAN разобраться
+
+
+
+
+
+function Loadd()
+{
+   arr = new Matrix1();
+   arr.init();
+   arr2 = new Matrix1();
+   arr2.init();
+
+   
+   for(var i = 0; i < 768; i++)
+   {
+      arr.addLine(a1[i],b1[i],c1[i],1);
+   }
+   hsize = arr.hsize;
+
+   arr.Copy(arr2);
+}
+
+function pnAMouseDown(e)
+{
+  
+  preX = e.pageX;
+  IsMouseDown=true;
+}
+function pnAMouseUp(e)
+{
+  IsMouseDown = false;
+}
+function pnAMouseMove(e)
+{
+ x = e.pageX;
+
+ if(IsMouseDown &&  x!=preX)
+ {
+   
+    rotation=rotation-(x-preX);
+    preX=x;
+    if (rotation<0) rotation=359;
+    if (rotation>=360) rotation=0;
+    r=true;
+    clearRect1();
+    LoadFromFile2(a1,b1,c1);
+ }
+}
+
+function LoadFromFile2(a,b,c)
+{
+  a1 = a;
+  b1 = b;
+  c1 = c;
+  
+  document.onmousedown = pnAMouseDown;
+  document.onmouseup = pnAMouseUp;
+  document.onmousemove = pnAMouseMove;
+
+
+ 
+  model[0] = new Model1();
+  model[1] = new Model1();
+  model[2] = new Model1();
+  model[3] = new Model1();
+  Loadd();
+ 
+ 
+
+ arr.LoadIdentity;
+ arr.Scale(3,3,3);
+ arr.RotateX(90);
+ arr.RotateY(rotation);
+
+ arr.Translate(canvas1.width/2,canvas1.height/2,0);
+ 
+ model[0].MultMatrix(arr);
+ model[0].Draw(ctx1, canvas1.width, canvas1.height);
+ 
+ Loadd();
+ 
+ arr.LoadIdentity;
+ 
+ arr.Scale(3,3,3);
+ arr.RotateX(90);
+ arr.RotateX(rotation);
+ arr.Translate(canvas2.width/2,canvas2.height/2,0);
+ 
+ model[1].MultMatrix(arr);
+ model[1].Draw(ctx2,canvas2.width,canvas2.height);
+ 
+ 
+ Loadd();
+ 
+ arr.LoadIdentity;
+ 
+ arr.Scale(3,3,3);
+ arr.RotateX(90);
+ arr.RotateZ(rotation);
+ arr.Translate(canvas3.width/2,canvas3.height/2,0);
+ 
+ model[2].MultMatrix(arr);
+ model[2].Draw(ctx3,canvas3.width,canvas3.height);
+ 
+ Loadd();
+ 
+ arr.LoadIdentity;
+ 
+ arr.Scale(3,3,3);
+ arr.RotateX(90);
+ arr.RotateY(rotation);
+ arr.RotateX(30);
+ arr.RotateY(-30);
+ arr.Translate(canvas4.width/2,canvas4.height/2,0);
+ 
+ model[3].MultMatrix(arr);
+ model[3].Draw(ctx4,canvas4.width,canvas4.height);
+ 
+}
+
+//Функция для преобразования
+    function toFixed(x) {
+      if (Math.abs(x) < 1.0) {
+        var e = parseInt(x.toString().split('e-')[1]);
+        if (e) {
+            x *= Math.pow(10,e-1);
+            x = '0.' + (new Array(e)).join('0') + x.toString().substring(2);
+        }
+      } else {
+        var e = parseInt(x.toString().split('+')[1]);
+        if (e > 20) {
+            e -= 20;
+            x /= Math.pow(10,e);
+            x += (new Array(e+1)).join('0');
+        }
+      }
+      return x;
+    }
+  
+    
+    function clearRect1()
+    {
+      for(var i = 0; i < model.length; i++)
+      {
+        ctxArr[i].clearRect(0, 0, canvasArr[i].width, canvasArr[i].height);
+     }
+    }
+    function createEmoteCallback(name)
+    {
+          api[ name ] = function () {
+            var name1 = name+'.txt';
+             clearRect1();
+             LoadFromFile("models/"+name1);
+
+					};
+					gui.add( api, name );
+    }
+    
+  
+    
+    function LoadFromFile(FileName){
+      var req = new XMLHttpRequest();
+      var data = "1";
+      req.open("GET", FileName, false);
+     
+      req.onreadystatechange = function() {
+        
+        if(req.readyState===4){
+         
+          if(req.status===200){
+            
+            let text = req.responseText // Текст содержащий много строк
+            let lines = text.split('\n') // Массив каждый элемент - отдельная строка
+            let num;
+            const arr1 = []
+
+            for(var i = 0; i < lines.length; i++)
+            {
+                const j = i % 3
+                const k = Math.trunc(i / 3)
+
+                num = +lines[i];
+                num = toFixed(num);
+                //console.log(num);
+                if (!arr1[j]) arr1[j] = [];
+                arr1[j][k] = num;
+
+
+            }
+            var arr = JSON.stringify(b, null, ' ');
+            var a = arr1[0];
+            var b = arr1[1];
+            var c = arr1[2];
+           
+          LoadFromFile2(a,b,c);
+          
+
+
+          }
+        }
+      }
+      try
+      {
+         req.send(null);
+      }
+      catch (e)
+      {
+         alert(e.message);
+      }
+      
+    }
+    
+    function init()
+    {
+            for ( let i = 0; i < emotes.length; i ++ ) {
+
+              createEmoteCallback( emotes[ i ] );
+
+            }
+    }
+    
+    init();
+    
+    
+    LoadFromFile("models/Dummie.txt");
+
+    </script>
+  </body>
+</html>
