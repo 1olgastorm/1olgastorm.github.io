@@ -519,22 +519,15 @@ function LoadFromFile2(a,b,c)
     }
     
   
-    
-    function LoadFromFile(FileName){
-      var req = new XMLHttpRequest();
-      var data = "1";
-      req.open("GET", FileName, false);
-     
-      req.onreadystatechange = function() {
-        
-        if(req.readyState===4){
-         
-          if(req.status===200){
-            
-            let text = req.responseText // Текст содержащий много строк
+    async function LoadFromFile(FileName)
+     {
+            let contentResponse = await fetch(FileName);
+            let text = await contentResponse.text();
             let lines = text.split('\n') // Массив каждый элемент - отдельная строка
+            console.log(lines);
+            
             let num;
-            const arr1 = []
+            let arr1 = []
 
             for(var i = 0; i < lines.length; i++)
             {
@@ -543,34 +536,24 @@ function LoadFromFile2(a,b,c)
 
                 num = +lines[i];
                 num = toFixed(num);
-                //console.log(num);
+                
                 if (!arr1[j]) arr1[j] = [];
                 arr1[j][k] = num;
 
 
             }
             var arr = JSON.stringify(b, null, ' ');
+            
             var a = arr1[0];
+            
             var b = arr1[1];
             var c = arr1[2];
-           
-          LoadFromFile2(a,b,c);
-          
-
-
-          }
-        }
-      }
-      try
-      {
-         req.send(null);
-      }
-      catch (e)
-      {
-         alert(e.message);
-      }
-      
-    }
+            LoadFromFile2(a,b,c);
+            
+            
+     }
+    
+   
     
     function init()
     {
