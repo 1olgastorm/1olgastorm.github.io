@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+  <style>
+   
+  </style>
+  <meta charset="utf-8">
+	<title>Page1</title>
+	<script>
+     var canvas, ctx, sudoku;
+      var board_indexes =[];
+   // var boardSolution = [];
+      var arr2 = [];
+      var cellsComplete = 0;
+      var boardSolution = [];
+     var board_solution_tmp = [];
+     var fixCellsNr = 30;
+     var row2 = 9;
+     function showInfo()
+     {
+      canvas = document.getElementById("canvas");
+      canvas.width = 1000;
+      canvas.height = 400;
+      canvas.style.width = canvas.width + "px";
+      canvas.style.height = canvas.height + "px";
+      ctx = canvas.getContext("2d");
+      sudoku = new Array(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+				solve(sudoku);
+     }
+     function return_row(cell) {
+        return Math.floor(cell / row2);
+			}
+			function return_col(cell) {
+				return cell % row2;
+			}
+			function return_block(cell) {
+				return Math.floor(return_row(cell) / 3) * 3 + Math.floor(return_col(cell) / 3);
+			}
+			function is_possible_row(number,row,sudoku) {
+				var possible = true;
+				for (var i=0; i<row2; i++) {
+					if (sudoku[row*row2+i] == number) {
+						possible = false;
+						break;
+					}
+				}
+				return possible;
+			}
+			function is_possible_col(number,col,sudoku) {
+				var possible = true;
+				for (var i=0; i<row2; i++) {
+					if (sudoku[col+row2*i] == number) {
+						possible = false;
+						break;
+					}
+				}
+				return possible;
+			}
+			function is_possible_block(number,block,sudoku) {
+				var possible = true;
+				for (var i=0; i<row2; i++) {
+					if (sudoku[Math.floor(block/3)*27+i%3+row2*Math.floor(i/3)+3*(block%3)] == number) {
+						possible = false;
+						break;
+					}
+				}
+				return possible;
+			}
+     function determine_possible_values(cell,sudoku) {
+				var possible = new Array();
+				for (var i=1; i<=row2; i++) {
+					if (is_possible_number(cell,i,sudoku)) {
+						possible.unshift(i);
+					}
+				}
+				return possible;
+			}
+     function determine_random_possible_value(possible,cell) {
+				var random_picked = Math.floor(Math.random() * possible[cell].length);
+				return possible[cell][random_picked];
+			}
+			function scan_sudoku_for_unique(sudoku) {
+				var possible = new Array();
+				for (var i=0; i<81; i++) {
+					if (sudoku[i] == 0) {
+						possible[i] = new Array();
+						possible[i] = determine_possible_values(i,sudoku);
+						if (possible[i].length==0) {
+							return false;
+						}
+					}
+				}
+				return possible;
+			}
+     function is_possible_number(cell,number,sudoku) {
+				var row = return_row(cell);
+				var col = return_col(cell);
+				var block = return_block(cell);
+				return is_possible_row(number,row,sudoku) && is_possible_col(number,col,sudoku) && is_possible_block(number,block,sudoku);
+			}
+     function is_correct_row(row,sudoku) {
+				var right_sequence = new Array(1,2,3,4,5,6,7,8,9);
+				var row_temp= new Array();
+				for (var i=0; i<row2; i++) {
+					row_temp[i] = sudoku[row*row2+i];
+				}
+				row_temp.sort();
+				return row_temp.join() == right_sequence.join();
+			}
+			function is_correct_col(col,sudoku) {
+				var right_sequence = new Array(1,2,3,4,5,6,7,8,9);
+				var col_temp= new Array();
+				for (var i=0; i<row2; i++) {
+					col_temp[i] = sudoku[col+i*row2];
+				}
+				col_temp.sort();
+				return col_temp.join() == right_sequence.join();
+			}
+     function is_correct_block(block,sudoku) {
+				var right_sequence = new Array(1,2,3,4,5,6,7,8,9);
+				var block_temp= new Array();
+				for (var i=0; i<row2; i++) {
+					block_temp[i] = sudoku[Math.floor(block/3)*27+i%3+row2*Math.floor(i/3)+3*(block%3)];
+				}
+				block_temp.sort();
+				return block_temp.join() == right_sequence.join();
+			}
+     function is_solved_sudoku(sudoku) {
+				for (var i=0; i<row2; i++) {
+					if (!is_correct_block(i,sudoku) || !is_correct_row(i,sudoku) || !is_correct_col(i,sudoku)) {
+						return false;
+					}
+				}
+				return true;
+			}
+			function remove_attempt(attempt_array,number) {
+				var new_array = new Array();
+				for (var i=0; i<attempt_array.length; i++) {
+					if (attempt_array[i] != number) {
+						new_array.unshift(attempt_array[i]);
+					}
+				}
+				return new_array;
+			}
+			function next_random(possible) {
+				var mai = row2;
+				var min_choices = 0;
+				for (var i=0; i<81; i++) {
+					if (possible[i]!=undefined) {
+						if ((possible[i].length<=mai) && (possible[i].length>0)) {
+							mai = possible[i].length;
+							min_choices = i;
+						}
+					}
+				}
+				return min_choices;
+			}
+			function shuffle(array) 
+      {
+            var currentIndex   = array.length, 
+                temporaryValue = 0,
+                randomIndex = 0;        
+            
+            while (0 !== currentIndex) {
+                randomIndex   = Math.floor(Math.random() * currentIndex);
+                currentIndex -= 1;
+                temporaryValue      = array[currentIndex];
+                array[currentIndex] = array[randomIndex];
+                array[randomIndex]  = temporaryValue; 
+             }
+             
+            return array;
+       }; 
+			function show_sudoku(sudoku,i) 
+			{
+				//var sudokutext:TextField = new TextField();
+				//var format:TextFormat = new TextFormat();
+				
+			//	
+				
+				for(var i = 0; i < sudoku.length; i++)
+				{
+            board_solution_tmp[i] = sudoku[i];
+        }
+				var sudoku2 = sudoku;
+				
+				 var solved = "\n\nSolved in "+i+" steps";
+         var sudokuText = ""; 
+          for (var i=0; i<9; i++) {
+              for (var j=0; j<9; j++) {
+                sudokuText+=" ";
+                if(sudoku[i*9+j]!=0)
+                {
+                  sudokuText+=sudoku[i*9+j];
+                }
+                else
+                {
+                  sudokuText+=" ";
+                }
+                
+                sudokuText+=" ";
+                if (j!=8) {
+                  sudokuText+="|";
+                }
+              }
+              if (i!=8) {
+                sudokuText+="\n---+---+---+---+---+---+---+---+---\n";
+              }
+            }
+            sudokuText+=solved;
+            document.getElementById("content").innerHTML = "<pre>"+sudokuText+"</pre>";
+				
+				boardSolution = board_solution_tmp;
+				for(var ii1 = 0; ii1 < boardSolution.length; ii1++)
+				{
+          board_indexes[ii1] = ii1;
+          sudoku[ii1] = 0;
+				}
+				board_indexes = shuffle(board_indexes);
+				
+				board_indexes = board_indexes.slice(0, fixCellsNr);
+				for (i=0; i< board_indexes.length; i++) 
+        {
+                sudoku[ board_indexes[i] ] = boardSolution[ board_indexes[i] ];
+                if (parseInt(sudoku[ board_indexes[i] ]) > 0) {
+                    cellsComplete++;
+                }
+                
+        }
+				
+				ctx.fillStyle = "black";
+	      ctx.fillRect(0, 0, canvas.width, canvas.height);
+			  ctx.fillStyle="#cfcfcf";
+				console.log("\n\nSolved in "+i+" steps");
+			 ctx.clearRect(0,0, canvas.width, canvas.height);
+			 for (var ii = 0; ii < sudoku.length; ii++)
+       {
+         x = 30 * (ii % row2) + Math.floor(ii % row2 / 3);
+         y = 30 * Math.floor(ii / row2) + Math.floor((ii) / (3*row2) / 1);
+         rect = new Rectangle(x,y,20,20,sudoku,sudoku,9,9,30,3,1,ii);
+         rect.draw(ctx);
+        // grid.push(rect);
+       
+       }
+       document.getElementById("debug").value = sudoku; 
+        //document.getElementById("debug").value="wawd";
+       
+         
+			  //ctx.fillText("awdawd",10,20);
+			  var x = 400;
+			  var y = 20;
+			  ctx.font = "bold 14px Arial";
+				for (var i=0; i<9; i++) {
+					for (var j=0; j<9; j++) {
+					  ctx.fillText(" ",(i*20)+x,(j*20)+y);
+						ctx.fillText(sudoku2[i*9+j],(i*25)+x,(j*25)+y);
+						ctx.fillText(" ",(i*20)+x,(j*20)+y);
+						if (j!=8) {
+							//ctx.fillText("|",(i*25)+x+20,(j*25)+y+20);
+							//console.log("test");
+						}
+					}
+					if (i!=8) {
+           // ctx.fillText("---+---+---+---+---+---+---+---+---",20,i*25);
+						
+					}
+				}
+				
+			}
+     function solve(sudoku)
+     {
+        var saved = new Array();
+				var saved_sud = new Array();
+				var i=0;
+				var next_move;
+				var what_to_try;
+				var attempt;
+				while (!is_solved_sudoku(sudoku)) {
+          i+=1;
+          next_move = scan_sudoku_for_unique(sudoku);
+          
+          if (next_move == false) {
+						next_move = saved.pop();
+						sudoku = saved_sud.pop();
+					}
+					what_to_try = next_random(next_move);
+					attempt = determine_random_possible_value(next_move,what_to_try);
+					if (next_move[what_to_try].length>1) {
+						next_move[what_to_try] = remove_attempt(next_move[what_to_try],attempt);
+					  saved.push(next_move.slice());
+						saved_sud.push(sudoku.slice());
+					}
+					sudoku[what_to_try] = attempt;
+				}
+				
+				show_sudoku(sudoku,i);
+    }
+    Rectangle = function(x,y, xpos, ypos,arr,arr1,colw,rows,size,sector,flag,i)
+    {
+        this.x = x;
+        this.y = y;
+        this.colw = colw;
+        this.rows = rows;
+        this.i = i;
+        this.size = size;
+        this.sector = sector;
+        this.arr = arr;
+        this.arr1 = arr1;
+        this.flag = flag;
+        this.xpos = xpos;
+        this.ypos = ypos;
+        
+        this.Contains = function(x, y, xpos, ypos)
+        {
+              if(x >= this.x+xpos && x <= this.x+(this.size+xpos) && 
+                y >= this.y+ypos && y <= this.y+(this.size+ypos))
+              {
+                return true;
+              }
+              else
+              return false;
+        };
+        
+        this.draw = function(ctx)
+        {
+         
+          var x1,y1;
+          ctx.beginPath();
+          ctx.lineWidth = 4; 
+          x1 = Math.floor(this.i % this.colw * this.sector / this.colw);
+          y1 = Math.floor(this.i / (this.sector*this.rows));
+          
+          ctx.save();
+          if(this.flag==1)
+          {
+            ctx.fillStyle = 'rgb(255,255,255)'; 
+          }
+          if(this.flag==2)
+          {
+            ctx.fillStyle = 'rgb(0,255,255)';
+            ctx.globalAlpha = 0.7; 
+          }
+          if(this.flag==3)
+          {
+            ctx.fillStyle = 'rgb(255,0,0)'; 
+            ctx.globalAlpha = 0.7; 
+          }
+          ctx.fillRect(this.x, this.y, this.size, this.size);
+          
+          if(this.flag==1)
+          { 
+            ctx.strokeRect(x1*this.size*this.sector, y1*this.size*this.sector, this.colw*this.size/this.sector, this.rows*this.size/this.sector);
+            ctx.lineWidth = 1; 
+            ctx.strokeRect(0, 0, this.x+this.size, this.y+this.size);
+            ctx.restore();
+            ctx.save();
+            ctx.font = "24px serif";
+          }
+          
+          
+         
+          if(this.arr1[this.i]==0)
+          { 
+             ctx.fillStyle = 'rgb(0,100,50)';
+          }
+          if(this.arr[this.i]!=0 && this.flag==1)
+          {
+            //console.log('111');
+            ctx.fillText(this.arr[this.i],this.x+(this.size/2)-7,this.y+(this.size/2)+7);
+          }
+          
+         
+          ctx.restore();
+          //ctx.fillText(0,0,'111');
+        }
+        
+       // alert(this.rows);
+
+    }
+  </script> 
+</head>
+<body onload="showInfo()">  
+<canvas id="canvas">
+        Your browser does not support HTML5 canvas. If you would 
+        like to view, please update your browser. 
+</canvas>
+<div id="content"></div>
+<input type="text" id="debug">
+
+</body>
+</html>

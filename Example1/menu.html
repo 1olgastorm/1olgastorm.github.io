@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Menu</title>
+</head>
+  <body>
+  <script>
+   var canvas, ctx;
+   var buttons = [];
+   var name = "";
+   function main()
+   {
+      canvas = document.createElement("canvas");
+      ctx = canvas.getContext("2d");
+      canvas.width =  300;
+      canvas.height = 340;
+      canvas.style.background = "#444444";
+      document.body.appendChild(canvas);
+      canvas.addEventListener("mousemove", mouseMove);
+      canvas.addEventListener("mousedown", mouseDown);
+      menu();
+   }
+   
+   function Button(x, y, w, h, color, text) 
+   {
+      this.x = x;
+      this.y = y;
+      this.w = w;
+      this.h = h;
+      this.color = color;
+      this.text = text;
+   }
+   
+   
+   
+   function menu()
+   {
+      buttons.push(new Button(70, 50, 170, 30, 'rgb(150,190,255)', 'Кнопка 1'));
+      buttons.push(new Button(70, 100, 170, 30, 'rgb(150,190,255)', 'Кнопка 2'));
+      buttons.push(new Button(70, 150, 170, 30, 'rgb(150,190,255)', 'Кнопка 3'));
+      buttons.push(new Button(70, 200, 170, 30, 'rgb(150,190,255)', 'Кнопка 4'));
+      setInterval(drawScene, 40);
+   }
+   
+   function drawScene()
+   {
+       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); // Оцистка элемента 
+      // Выводим все кнопки
+      for (var ib = 0; ib < buttons.length; ib++) { //
+          drawButton(ctx, buttons[ib]);
+      }
+   
+   }
+   
+   
+   // Функция вывода кнопки
+    function drawButton(ctx, button) {
+        // Выводим изображение кнопки
+        ctx.fillStyle   = button.color;
+        ctx.fillRect(button.x, button.y, button.w, button.h);
+        ctx.font = '24px Verdana';
+        ctx.fillStyle = '#fff';
+        ctx.fillText(name, 20, 30);
+        ctx.fillText(button.text, button.x+20, 5+button.y + button.h / 2);
+    }
+   function mouseDown(evt)
+   {
+      var el = evt.target;
+      var px = evt.clientX - el.offsetLeft;
+      var py = evt.clientY - el.offsetTop;
+      for(var i = 0; i < buttons.length; i++)
+      {
+         if(px>=buttons[i].x && px <= buttons[i].x+buttons[i].w && py >=buttons[i].y && py <=buttons[i].y+buttons[i].h)
+         {
+            name = buttons[i].text+" нажата";
+         }
+      }
+   
+   }
+   function mouseMove(evt)
+   {
+     
+      var el = evt.target;
+      var px = evt.clientX - el.offsetLeft;
+      var py = evt.clientY - el.offsetTop;
+      
+      for(var i = 0; i < buttons.length; i++)
+      {
+         buttons[i].color = "rgb(150,190,255)"; 
+         if(px>=buttons[i].x && px <= buttons[i].x+buttons[i].w && py >=buttons[i].y && py <=buttons[i].y+buttons[i].h)
+         {
+            buttons[i].color = "#000";
+         }
+      }
+   }
+   main();
+   
+  </script>
+  </body>
+</html>

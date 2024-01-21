@@ -1,0 +1,154 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+	<title>Shooter</title>
+</head>
+    <body>
+      <canvas id="c" width=500 height=500></canvas>
+    <script>
+    RotateRect = function(x,y,mouseX,mouseY,width,height)
+    {
+      this.x = x;
+      this.y = y;
+      this.msX = mouseX;
+      this.msY = mouseY;
+      this.width = width;
+      this.height = height;
+      this.angle = 0;
+      this.draw = function(ctx)
+      {
+          this.angle = Math.atan2(this.msY - this.y, this.msX - this.x) * 180 / Math.PI;
+      		ctx.save();
+      		ctx.beginPath();
+      		ctx.translate(this.x, this.y);
+      		ctx.rotate(this.angle * Math.PI / 180);
+      		ctx.translate(-this.x, -this.y);
+      		ctx.rect(this.x, this.y, this.width, this.height);
+      		ctx.fill();
+      		ctx.restore();
+      }
+    }
+    Shot = function(x,y,r)
+    {
+      this.x = x;
+      this.y = y;
+      this.r = r;
+      this.isReloading = false;
+      this.reloadStarted = 0;
+      this.reloadInterval = 5000;
+      this.isAlive = true;
+      this.xmov = 0;
+      this.ymov = 0;
+      this.perpindahan = 0;
+      this.speed = 5;
+      
+      this.select = function()
+      {
+         this.xmov = Math.cos(rotRect.angle * Math.PI / 180) * this.speed;
+         this.ymov = Math.sin(rotRect.angle * Math.PI / 180) * this.speed;
+         this.isReloading = true;
+         this.reloadStarted = new Date().getTime();
+      }
+      this.draw = function(ctx)
+      {
+          
+          ctx.save();
+          ctx.beginPath();
+          ctx.translate(rotRect.x, rotRect.y);
+          ctx.arc(this.x, this.y, this.r, 0, this.getRadians(360));
+          ctx.translate(-(rotRect.x), -(rotRect.y));
+          ctx.stroke();
+          ctx.restore();
+      }
+      this.update = function()
+      {
+        if( ! this.isReloading ) return;
+        var now = new Date().getTime(),
+        start = this.reloadStarted,
+        end = this.reloadStarted + this.reloadInterval;
+        
+        this.x = this.x + this.xmov;
+        this.y = this.y + this.ymov;
+        
+        this.perpindahan = Math.sqrt(this.x * this.x + this.y * this.y);
+        console.log(this.perpindahan);
+        if(this.perpindahan>200)
+        {
+          this.die();
+        }
+      }
+      this.die = function()
+      {
+        var newShots = [];
+        for( var i = 0; i < shots.length; i++ ) {
+          
+          if( shots[i] !== this)
+              newShots.push(shots[i]);
+        } 
+        shots = newShots; 
+        delete this;
+      }
+     
+      this.getRadians = function(degrees) {
+        return (Math.PI / 180) * degrees;
+      }
+      
+    }
+    document.addEventListener("DOMContentLoaded", ready);
+    var rotRect, arc1;
+    var canvas, ctx, mousePoint, shots;
+    
+    function ready()
+    {
+      shots = [];
+       width = 70;
+       height = 10;
+       canvas = document.getElementById("c");
+       ctx = canvas.getContext("2d");
+       rotRect = new RotateRect(canvas.width / 2, canvas.height / 2,canvas.width / 2, canvas.height / 2,width,height);
+       rotRect.draw(ctx);
+       canvas.onmousedown = myDown;
+       canvas.onmousemove = myMove;
+       animate();
+    }
+    function myDown(e)
+    {
+      var dx = Math.cos(rotRect.angle * Math.PI / 180) * 70;
+      var dy = Math.sin(rotRect.angle * Math.PI / 180) * 70;
+     
+      arc1 = new Shot(dx,dy,5,true);
+      arc1.select();
+      shots.push(arc1);
+      
+    }
+    function myMove(e)
+    {
+       
+      var dx = e.pageX - e.target.offsetLeft;
+      var dy = e.pageY - e.target.offsetTop;
+      rotRect.msY = dy;
+      rotRect.msX = dx;
+      
+    }
+    function draw()
+    {
+       ctx.clearRect(0, 0, canvas.width, canvas.height);
+       for(var i = 0; i < shots.length; i++)
+       {
+            shots[i].draw(ctx);
+            shots[i].update();
+       }
+       rotRect.draw(ctx);
+    }
+    
+    function animate()
+    {
+      draw();
+      requestAnimationFrame(animate);
+    } 
+
+</script>
+    
+
+    </body>
+</html>
