@@ -1,0 +1,48 @@
+<!DOCTYPE html> 
+<html> 
+    <head> 
+        <title>Shooter</title> 
+        
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, minimal-ui" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="mobile-web-app-capable" content="yes" />
+          
+      	<style type="text/css">
+          * {
+            padding: 0;
+            margin: 0;
+          }
+          body {
+            background-color: #000000;
+            background-image: url('assets/background.png');
+            background-size: contain;
+            
+          }
+          html, body {
+            overflow: hidden;
+            touch-action: none;
+            -ms-touch-action: none;
+           
+          }
+          canvas {
+            touch-action-delay: none;
+            touch-action: none;
+            -ms-touch-action: none;
+          }
+         
+        </style>
+    
+      <script src="../lib/easeljs-0.8.2.min.js"></script>
+      <script src="../lib/preloadjs.min.js"></script>
+      <script src="../lib/tweenjs-0.6.2.min.js"></script>
+      <script src="../lib/soundjs-0.6.1.min.js"></script>
+      <script src="Main.js"></script> 
+  
+    </head> 
+    <body onload="Main();" style="background-color: black"> 
+      <div id="gameWrapper" >
+        <canvas id="Shooter" width="720" height="1080"></canvas> 
+      </div>
+    </body> 
+</html>
