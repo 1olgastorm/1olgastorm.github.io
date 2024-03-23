@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Загрузка картинки</title>
+<script>
+var canvas, ctx, img;
+
+window.onload = function()
+{
+  const img = new Image()
+  img.src = 'main.jpg';
+  img.crossOrigin = "Anonymous";
+  img.onload = function()
+  {  
+      canvas = document.getElementById("drawingCanvas");
+      ctx = canvas.getContext("2d");
+      
+      const w = img.naturalWidth
+      const h = img.naturalHeight
+      const x1 = 0;
+      const y1 = 0;
+      const x2 = 100;
+      const y2 = 0; 
+      canvas.width = 200;
+      canvas.height = 100;
+      
+      ctx.clearRect(0, 0, w, h)
+      ctx.drawImage(img, x2, y2, w, h)
+      ctx.drawImage(img, x1, y1, w, h)
+   
+      const imageData = ctx.getImageData(x2, y2, w, h);
+      console.log(imageData);
+      const view = new DataView(imageData.data.buffer);
+       for (let i = 0; i < h; i++) {
+                let str = ""
+           
+            for (let j = 0; j < w; j++) 
+            {
+                  const k = i * 4 * w + 4 * j
+                  if (view.getUint32(k) > 0x777777ff) {
+                    view.setUint32(k, 0x00ff00ff)
+                    
+                    str += "_"
+                  } else {
+                    view.setUint32(k, 0xff0000ff);
+                   
+                    str += "e"
+                  }
+            }
+            
+        }
+   
+    view.setUint32(66, 0xFF000000, true);  
+    ctx.putImageData(imageData, x2, y2);
+  }
+}
+</script>
+</head>
+<body>
+<canvas id="drawingCanvas" style="background:#444444" width="400px" height="300px"></canvas><br>
+</body>
+</html>
