@@ -1,0 +1,371 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Пример hitTest </title>
+<script>
+window.onload = function()
+{
+var canvas = document.getElementById("drawingCanvas");
+var context = canvas.getContext("2d");
+ 
+var BB=canvas.getBoundingClientRect();
+var offsetX=BB.left;
+var offsetY=BB.top;
+var WIDTH = canvas.width;
+var HEIGHT = canvas.height;
+ 
+var dragok = false;
+var startX;
+var startY;
+var _activeInstructions = [];
+ 
+var shapeW = 50, hitW = 100;
+ 
+ 
+ 
+   localToLocal = function(hit1,x, y, target, pt) {
+        var tx1,ty1,pt1;
+        tx1 = 1*hit1.x+0*hit1.y+0;
+        ty1 = 0*hit1.x+1*hit1.y+0;
+ 
+        
+        pt1 = {};
+        pt1.x = x*1+y*0+tx1;
+        pt1.y = x*0+y*1+ty1;
+        
+      
+     
+        return globalToLocal(target,pt1.x, pt1.y, pt);
+    };
+ 
+ 
+
+ 
+ 
+globalToLocal = function(hit1,x, y, pt) {
+  
+      
+      var mtx1 = {a:1,b:0,c:0,d:1,tx:-150,ty:-150};
+      
+     
+      var pt1 = {};
+      pt1.x = x*1+y*0+mtx1.tx;
+      pt1.y = x*0+y*1+mtx1.ty;
+      
+      
+      return pt1;
+       
+}
+
+
+ 
+Shape = function(x,y,w,h,color,color1,lineWidth1)
+{
+   
+    this.x1 = x;
+    this.y1 = y;
+    this.w = w;
+    this.h = h;
+    this.color = color;
+    this.color1 = color1;
+    this.lineWidth = lineWidth1;
+    this.exec = function(ctx)
+    {
+      ctx.lineWidth =  this.lineWidth;
+      ctx.beginPath(); 
+     
+      
+      ctx.rect(this.x1, this.y1, this.w, this.h);
+      ctx.fillStyle = this.color;
+      ctx.fill();
+      
+     
+      ctx.strokeStyle = this.color1;
+      ctx.stroke();
+        
+    }
+    
+   this.hitTest = function(ctx, x, y) {
+     
+      ctx.setTransform(1, 0, 0, 1, -x, -y);
+      this.exec(ctx);
+      console.log(this.y1);
+      var hit = this._testHit(ctx);
+      
+       
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+     // ctx.clearRect(0, 0, 2, 2);
+      return hit;
+      
+    };
+   this.set = function(props) {
+        
+        for (var n in props) { 
+        this[n] = props[n]; 
+        }
+        return this;
+    };
+    
+  this._testHit = function(ctx) {
+   document.getElementById("debug").value=ctx.getImageData(0, 0, 1, 1).data[3];
+        try {
+            
+            var hit = ctx.getImageData(0, 0, 100, 100).data[3] > 1;
+           
+            
+        } catch (e) {
+            
+        }
+        
+        return hit;
+    };
+    
+    
+ 
+    this.updateContext = function(ctx) {
+        var o = this;
+          var a1 = 1;
+          var b1 = 0;
+          var c1 = 0;
+          var d1 = 1;
+          
+          var tx1 = a1*o.x+c1*o.y+0;
+          var ty1 = b1*o.x+d1*o.y+0;
+          
+          var mtx = {a:1,b:0,c:0,d:1,tx:tx1,ty:ty1};
+        
+        var tx = mtx.tx,
+            ty = mtx.ty;
+       
+       
+        ctx.transform(mtx.a, mtx.b, mtx.c, mtx.d, tx, ty);
+     
+    }
+}
+ 
+Rectangle = function(x,y,w,h,color)
+{
+  this.x1 = x;
+  this.y1 = y;
+  this.w = w;
+  this.h = h;
+  this.color = color;
+  this.exec = function(ctx)
+  {
+  
+    ctx.beginPath(); 
+    ctx.rect(0, 0, this.w, this.h);
+    ctx.fillStyle = color;
+    ctx.fill();
+   
+  }
+  this.set = function(props) {
+      
+        for (var n in props) { this[n] = props[n]; }
+        return this;
+  };
+  
+  
+  
+  
+  this.updateContext = function(ctx) {
+        var o = this;
+ 
+       
+        
+        
+        var a1 = 1;
+        var b1 = 0;
+        var c1 = 0;
+        var d1 = 1;
+          
+          var tx1 = a1*o.x+c1*o.y+0;
+          var ty1 = b1*o.x+d1*o.y+0;
+          
+           
+       var mtx = {a:1,b:0,c:0,d:1,tx:tx1,ty:ty1};
+       var tx = mtx.tx,
+            ty = mtx.ty;
+        ctx.transform(mtx.a, mtx.b, mtx.c, mtx.d, tx, ty);
+        ctx.globalAlpha *= 1;
+    }
+    
+     this.localToLocal = function(x, y) {
+        var tx1,ty1,pt1;
+        tx1 = 1*this.x+0*this.y+0;
+        ty1 = 0*this.x+1*this.y+0;
+ 
+        
+        pt1 = {};
+        pt1.x = x*1+y*0+tx1;
+        pt1.y = x*0+y*1+ty1;
+        
+      
+     
+        return this.globalToLocal(pt1.x, pt1.y);
+    };
+ 
+ 
+
+ 
+ 
+    this.globalToLocal = function(x, y) {
+      
+          
+          var mtx1 = {a:1,b:0,c:0,d:1,tx:-150,ty:-150};
+          
+         
+          var pt1 = {};
+          pt1.x = x*1+y*0+mtx1.tx;
+          pt1.y = x*0+y*1+mtx1.ty;
+          
+          
+          return pt1;
+           
+    }
+    
+    
+} 
+ 
+ 
+ 
+function clear() {
+  context.clearRect(0, 0, WIDTH, HEIGHT);
+}
+ 
+ 
+ 
+ 
+   setInterval(() => {
+              (
+                function() {
+                  clear();
+                  draw();
+                }).call(this);
+   }, 33);
+var shape1,rect1; 
+ 
+ 
+function init() {
+  clear();
+  
+  shape1 = new Shape(0,0,hitW,hitW,"grey","blue",1);
+  shape1.set({x:150, y:150});
+  
+  
+ 
+  
+  rect1 = new Rectangle(0,0,50,50,"blue");
+  rect1.set({x:10, y:170});
+  
+   
+   
+   
+ canvas.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      var mx=parseInt(e.clientX-offsetX);
+      var my=parseInt(e.clientY-offsetY);
+      dragok=false;
+      
+      
+      if(mx>rect1.x && mx<rect1.x+rect1.w && my>rect1.y && my<rect1.y+rect1.h){
+          
+         
+          dragok=true;
+          
+     }
+      
+      
+       startX=mx;
+       startY=my;
+      
+      
+  });
+  canvas.addEventListener("mouseup", (e) => {
+     e.preventDefault();
+     e.stopPropagation();
+ 
+ 
+     dragok = false;
+      
+  });
+  
+  canvas.addEventListener("mousemove", (e) => {
+     
+   if (dragok){
+       e.preventDefault();
+      e.stopPropagation();
+ 
+    
+      var mx=parseInt(e.clientX-offsetX);
+      var my=parseInt(e.clientY-offsetY);
+ 
+     
+      var dx=mx-startX;
+      var dy=my-startY;
+      
+     
+      
+      
+      rect1.x+=dx;
+      rect1.y+=dy;
+      
+      
+    //   var pt = localToLocal(rect1,rect1.x-shape1.x,rect1.y-shape1.y,shape1);
+              //    if (shape1.hitTest(context,pt.x, pt.y)) {
+              //        shape1.color1 = "green";
+               //       shape1.lineWidth = 7;
+               //     } else {
+                //      shape1.color1 = "blue";
+                //      shape1.lineWidth = 1;
+                 //  }
+                 
+       var pt = rect1.localToLocal(rect1.x-shape1.x,rect1.y-shape1.y);
+                  if (shape1.hitTest(context,pt.x, pt.y)) {
+                    shape1.color1 = "green";
+                     shape1.lineWidth = 7;
+                 } else {
+                   shape1.color1 = "blue";
+                    shape1.lineWidth = 1;
+                   }
+      startX=mx;
+      startY=my;
+      
+      
+    }
+     
+      
+  });
+   
+   
+  
+ draw();
+  
+ 
+}
+function draw()
+{
+  context.save();
+  shape1.updateContext(context);
+  shape1.exec(context);
+  context.restore();
+  
+  context.save();
+  rect1.updateContext(context);
+  rect1.exec(context);
+  context.restore();
+}
+init();
+}
+</script>
+</head>
+<body>
+
+<canvas id="drawingCanvas" width="500" height="500"></canvas>
+<input type="text" id="debug" value="awdawd"/>
+<input type="text" id="debug2" value="awdawd"/>
+</body>
+</html>
